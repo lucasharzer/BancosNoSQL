@@ -1,97 +1,79 @@
 require("dotenv").config();
-const { MongoClient } = require("mongodb");
+const neo4j = require("neo4j-driver");
 
 
-class MongoDB {
+class Neo4jDB {
     constructor() {
-        this.uri = `${process.env.URI}:${process.env.PORT.toString()}`;
-        this.client = new MongoClient(
-            this.uri, { useNewUrlParser: true, useUnifiedTopology: true 
+        const protocol = process.env.PROTOCOL;
+        const host = process.env.HOST;
+        const port = process.env.PORT;
+        const user = process.env.USER;
+        const pass = process.env.PASSWORD;
+
+        const uri = `${protocol}://${host}:${port}`;
+        this.connection = neo4j.driver(uri, neo4j.auth.basic(user, pass));
+    }
+
+    async createSession() {
+        this.session = this.connection.session();
+        console.log("Sessão criada");
+    }
+
+    async insertItem(p_nome, p_telefone, p_status) {
+        const query = `CREATE (p:Pessoa {nome: $nome, telefone: $telefone, status: $status}) RETURN p`;
+        const params = { nome: p_nome, telefone: p_telefone, status: p_status };
+
+        const resultado = await this.session.run(query, params);
+        console.log("Item inserido");
+        resultado.records.forEach(record => {
+            console.log(record.get("p"));
         });
     }
 
-    async connect() {
-        try {
-            await this.client.connect();
-            console.log("Conectado ao MongoDB");
-        } catch (error) {
-            console.error("Erro ao conectar ao MongoDB:", error);
-        }
+    async updateItem(p_nome, p_novoTelefone, p_novoStatus) {
+        const query = `MATCH (p:Pessoa {nome: $nome}) SET p.telefone = $novoTelefone, p.status = $novoStatus RETURN p`;
+        const params = { nome: p_nome, novoTelefone: p_novoTelefone, novoStatus: p_novoStatus };
+
+        const resultado = await this.session.run(query, params);
+        console.log("Item atualizado");
+        resultado.records.forEach(record => {
+            console.log(record.get("p"));
+        });
     }
 
-    async getCollection() {
-        const database = this.client.db(process.env.DB);
-        this.collection = database.collection(process.env.COLLECTION);
+    async deleteItem(p_nome) {
+        const query = `MATCH (p:Pessoa {nome: $nome}) DELETE p`;
+        const params = { nome: p_nome };
+
+        const resultado = await this.session.run(query, params);
+        console.log("Item deletado");
+        console.log(resultado.summary.counters);
     }
 
-    async insertOne(document) {
-        try {
-            const result = await this.collection.insertOne(document);
-            return result.insertedId;
-        } catch (error) {
-            console.error("Erro ao inserir documento: ", error);
-        }
+    async selectItem(p_nome) {
+        const query = `MATCH (p:Pessoa {nome: $nome}) RETURN p`;
+        const params = { nome: p_nome };
+
+        const resultado = await this.session.run(query, params);
+        console.log("item encontrado");
+        resultado.records.forEach(record => {
+            console.log(record.get("p").properties);
+        });
     }
 
-    async deleteOne(filter) {
-        try {
-            const result = await this.collection.deleteOne(filter);
-            return result.deletedCount;
-        } catch (error) {
-            console.error("Erro ao deletar documento:", error);
-        }
+    async selectAllItems() {
+        const query = `MATCH (n) RETURN n LIMIT 5`;
+        const resultado = await this.session.run(query);
+        console.log("Todos os itens:")
+        resultado.records.forEach(record => {
+            console.log(record);
+        });
     }
 
-    async updateOne(filter, update) {
-        try {
-            const result = await this.collection.updateOne(filter, { $set: update });
-            return result.modifiedCount;
-        } catch (error) {
-            console.error("Erro ao atualizar documento:", error);
-        }
-    }
-
-    async findAll() {
-        try {
-            const cursor = await this.collection.find();
-            const result = await cursor.toArray();
-            if (result.length != 0) {
-                console.log("Todos os documentos:");
-                result.forEach(doc => console.log(doc));
-            }else {
-                console.log("Nenhum documento");
-            }
-            return result;
-        } catch (error) {
-            console.error("Erro ao buscar todos os documentos:", error);
-        }
-    }
-
-    async findWithFilter(filter) {
-        try {
-            const cursor = await this.collection.find(filter);
-            const result = await cursor.toArray();
-            if (result.length != 0) {
-                console.log("Documentos com filtro:");
-                result.forEach(doc => console.log(doc));
-            }else {
-                console.log("Nenhum documento");
-            }
-            return result;
-        } catch (error) {
-            console.error("Erro ao buscar documentos com filtro:", error);
-        }
-    }
-
-    async close() {
-        try {
-            await this.client.close();
-            console.log("Conexão fechada com o MongoDB");
-        } catch (error) {
-            console.error("Erro ao fechar conexão:", error);
-        }
+    async closeConnection() {
+        await this.session.close();
     }
 }
 
 
-module.exports = MongoDB;
+module.exports = Neo4jDB;

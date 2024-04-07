@@ -1,17 +1,16 @@
 {
-  "name": "mongodb",
+  "name": "neo4j",
   "version": "1.0.0",
-  "description": "Conexão no mongoDB",
+  "description": "Conexão no Neo4j",
   "main": "index.js",
   "scripts": {
-    "start": "node NodeJS/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node NodeJS/index.js"
   },
-  "keywords": [],
   "author": "lucasharzer",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.4.5",
-    "mongodb": "^6.4.0"
+    "neo4j-driver": "^5.18.0"
   }
 }

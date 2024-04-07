@@ -1,40 +1,72 @@
 from dotenv import load_dotenv, find_dotenv
-from pymongo import MongoClient
+from neo4j import GraphDatabase
 import os
 
 
-class MongoDB:
+class Neo4jDB:
     def __init__(self):
         load_dotenv(find_dotenv())
-        uri = os.getenv("URI") + ":" + str(os.getenv("PORT"))
-        self.client = MongoClient(uri)
-        self.db = self.client[os.getenv("DB")]
+        protocolo = os.getenv("PROTOCOL")
+        host = os.getenv("HOST")
+        porta = os.getenv("PORT")
+        user = os.getenv("USER")
+        password = os.getenv("PASSWORD")
 
-    def get_collection(self):
-        self.collection = self.db[os.getenv("COLLECTION")]
+        uri = f"{protocolo}://{host}:{porta}"
+        self.driver = GraphDatabase.driver(uri, auth=(user, password))
+    
+    def create_session(self):
+        self.session = self.driver.session()    
+        print("sessão criada")
 
-    def insert_one(self, document):
-        result = self.collection.insert_one(document)
-        return result.inserted_id
+    def insert_item(self, p_nome, p_telefone, p_status):
+        query = "CREATE (p:Pessoa {nome: $nome, telefone: $telefone, status: $status}) RETURN p"
+        params = {"nome": p_nome, "telefone": p_telefone, "status": p_status}
 
-    def delete_one(self, filter):
-        result = self.collection.delete_one(filter)
-        return result.deleted_count
+        with self.session.begin_transaction() as tx:
+            resultado = tx.run(query, params)
+            print("Item inserido")
+            for record in resultado:
+                print(record["p"])
+    
+    def update_item(self, p_nome, p_novo_telefone, p_novo_status):
+        query = "MATCH (p:Pessoa {nome: $nome}) SET p.telefone = $novo_telefone, p.status = $novo_status RETURN p"
+        params = {"nome": p_nome, "novo_telefone": p_novo_telefone, "novo_status": p_novo_status}
 
-    def update_one(self, filter, update):
-        result = self.collection.update_one(filter, {"$set": update})
-        return result.modified_count
+        with self.session.begin_transaction() as tx:
+            resultado = tx.run(query, params)
+            print("item atualizado")
+            for record in resultado:
+                print(record["p"])
 
-    def find_one(self, filter):
-        return self.collection.find_one(filter)
+    def delete_item(self, p_nome):
+        query = "MATCH (p:Pessoa {nome: $nome}) DELETE p"
+        params = {"nome": p_nome}
 
-    def find_all(self):
-        cursor = self.collection.find()
-        return list(cursor)
+        with self.session.begin_transaction() as tx:
+            resultado = tx.run(query, params)
+            print("Item deletado")
+            for record in resultado:
+                print(record["p"])
 
-    def find_with_filter(self, filter):
-        cursor = self.collection.find(filter)
-        return list(cursor)
+    def select_item(self, p_nome):
+        query = "MATCH (p:Pessoa {nome: $nome}) RETURN p"
+        params = {"nome": p_nome}
+
+        with self.session.begin_transaction() as tx:
+            resultado = tx.run(query, params)
+            print("Item encontrado")
+            for record in resultado:
+                print(record["p"])
+
+    def select_all_items(self):
+        query = "MATCH (n) RETURN n LIMIT 5"
+
+        with self.session.begin_transaction() as tx:
+            resultado = tx.run(query)
+            print("Todos os itens")
+            for record in resultado:
+                print(record)
 
     def close_connection(self):
-        self.client.close()
+        self.session.close()
