@@ -1,14 +1,14 @@
-# Banco de dados NoSQL - MongoDB
+# Banco de dados NoSQL - Neo4j
 
-Banco de dados não relacional do tipo documento;
+Banco de dados não relacional do tipo grafo;
 
-Fazendo conexão e executando queries básicas (Inserir, Selecionar, atualizar e deletar) no banco de dados MongoDB em execução no Docker usando NodeJS e Python.
+Fazendo conexão e executando queries básicas (Inserir, Selecionar, atualizar e deletar) no banco de dados Neo4j em execução no Docker usando NodeJS e Python.
 
 # Pacotes
 - dotenv: Biblioteca do NodeJS para acessar variáveis de ambiente no .env;
-- mongodb: Biblioteca do NodeJS para conexão com MongoDB;
+- neo4j-driver: Biblioteca do NodeJS para conexão com Neo4j;
 - python-dotenv: Biblioteca do Python para acessar variáveis de ambiente no .env;
-- pymongo: Biblioteca do Python para conexão com MongoDB.
+- neo4j: Biblioteca do Python para conexão com Neo4j.
 
 # Comandos
 - NodeJS | Instalar dependências:
@@ -27,9 +27,9 @@ pip install -r requirements.txt
 ```bash
 python main.py
 ```
-- Docker | Executar contêiner do MongoDB:
+- Docker | Executar contêiner do Neo4j:
 ```bash
-docker run -d -p 27017:27017 --name <nome do contêiner> mongo
+docker run --name <nome do contêiner> -p 7474:7474 -p 7687:7687 -d neo4j
 ```
 - Docker | Listar imagens:
 ```bash
@@ -40,18 +40,25 @@ docker image ls
 docker ps
 ```
 
+Obs: Ao executar contêiner é necessário acessar http://localhost:7474/ e criar usuário/senha para autenticação.
+
 # Resultados
+- Banco na web
+<span>
+    <img src="https://github.com/lucasharzer/Bancos_Dados-Tipos/assets/85804895/ef0fbe39-da04-42b2-a4db-351bacd6386a">
+</span>
+
 - NodeJS
 <span>
-    <img src="https://github.com/lucasharzer/Docker_Testes/assets/85804895/c3e77bed-865c-4576-b144-59da6a659e0d">
+    <img src="https://github.com/lucasharzer/Bancos_Dados-Tipos/assets/85804895/d038c88f-e49d-4f14-ba86-34228b2025a2">
 </span>
 
 - Python
 <span>
-    <img src="https://github.com/lucasharzer/Docker_Testes/assets/85804895/c41e33b9-7adf-4c08-a3ea-da2f19cd20c9">
+    <img src="https://github.com/lucasharzer/Bancos_Dados-Tipos/assets/85804895/9e13ed92-e75f-4a45-a91d-04bf70b4cc8e">
 </span>
 
 - Docker
 <span>
-    <img src="https://github.com/lucasharzer/Docker_Testes/assets/85804895/714e145e-2d52-40a9-8c44-51a02a2f8cce">
+    <img src="https://github.com/lucasharzer/Bancos_Dados-Tipos/assets/85804895/cbe0b938-4d10-43a0-bbc7-dee0c1e62edc">
 </span>
